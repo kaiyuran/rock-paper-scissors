@@ -6,26 +6,31 @@ def findDistance(p1x, p1y, p2x, p2y, length=640, height=480):
     return ((p2x - p1x) ** 2 + (p2y - p1y) ** 2) ** 0.5
 
 def determineType(hand):
-    refPoints = [[4,2],[8,5],[12,9],[16,13],[20,17],[0,5]] #ORDER: thumb to pinky, palm
-    handDistList = [0,0,0,0,0,0]
+    refPoints = [[8,5],[12,9],[16,13],[20,17],[0,5]] #ORDER: index finger to pinky, palm
+    handDistList = [0,0,0,0,0]
     # print(hand.landmark[(refPoints[i][2])].x)
-    for i in range(6):
+    for i in range(5):
         dist = findDistance(hand.landmark[(refPoints[i][0])].x, hand.landmark[(refPoints[i][0])].y, hand.landmark[(refPoints[i][1])].x, hand.landmark[(refPoints[i][1])].y)
         handDistList[i] = (dist)
     ratios = []
-    for i in range(5):
-        ratios.append(handDistList[i]/handDistList[5])
+    for i in range(4):
+        ratios.append(handDistList[i]/handDistList[-1])
 
     # prediction = ""
-    theoretical = [.5,.9,1,.9,.7]
+    theoretical = [.9,1,.9,.7]
     state = []
     for n, index in enumerate(ratios):
         difference = abs(abs(index)-theoretical[n])
         if difference < 0.3:
-            state.append("open")
+            state.append(True)
         else:
-            state.append("closed")
-    print(state)
+            state.append(False)
+    if state == [True, True, True, True]:
+        return "paper"
+    elif state == [False, False, False, False]:
+        return "rock"
+    else:
+        return "scissors"
     
 
     # cv2.putText(img, prediction, (10, 70), cv2.FONT_HERSHEY_PLAIN, 3,
@@ -41,7 +46,7 @@ hands = mpHands.Hands()
 mpDraw = mp.solutions.drawing_utils
 fingerLandmarks = [4, 8, 12, 16, 20]
 
-avgHandRatios = [[],[],[],[],[]]
+avgHandRatios = [[],[],[],[]]
 
 tempRatioList = []
 
@@ -62,9 +67,9 @@ while True:
                 if id in fingerLandmarks:
                     cv2.circle(img, (cx, cy), 15, colourList[handNum], cv2.FILLED)
             mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS)
-            determineType(handLms)
+            print(handNum+1, "state is", determineType(handLms))
             # tempRatioList = determineType(handLms)
-            # for i in range(5):
+            # for i in range(4):
             #     avgHandRatios[i].append(tempRatioList[i])
 
     cv2.imshow("Image", img)
