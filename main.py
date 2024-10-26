@@ -8,7 +8,6 @@ def findDistance(p1x, p1y, p2x, p2y, length=640, height=480):
 def determineType(hand):
     refPoints = [[8,5],[12,9],[16,13],[20,17],[0,5]] #ORDER: index finger to pinky, palm
     handDistList = [0,0,0,0,0]
-    # print(hand.landmark[(refPoints[i][2])].x)
     for i in range(5):
         dist = findDistance(hand.landmark[(refPoints[i][0])].x, hand.landmark[(refPoints[i][0])].y, hand.landmark[(refPoints[i][1])].x, hand.landmark[(refPoints[i][1])].y)
         handDistList[i] = (dist)
@@ -16,7 +15,7 @@ def determineType(hand):
     for i in range(4):
         ratios.append(handDistList[i]/handDistList[-1])
 
-    # prediction = ""
+    prediction = ""
     theoretical = [.9,1,.9,.7]
     state = []
     for n, index in enumerate(ratios):
@@ -26,18 +25,14 @@ def determineType(hand):
         else:
             state.append(False)
     if state == [True, True, True, True]:
-        return "paper"
+        prediction = "paper"
     elif state == [False, False, False, False]:
-        return "rock"
+        prediction = "rock"
     else:
-        return "scissors"
-    
+        prediction = "scissors"
+    return prediction
 
-    # cv2.putText(img, prediction, (10, 70), cv2.FONT_HERSHEY_PLAIN, 3,
-    #             (255, 0, 255), 3)
-    # print(handDistList)
-    # return ratios
-
+start = time.time()
 
 cap = cv2.VideoCapture(2)
 
@@ -46,9 +41,6 @@ hands = mpHands.Hands()
 mpDraw = mp.solutions.drawing_utils
 fingerLandmarks = [4, 8, 12, 16, 20]
 
-avgHandRatios = [[],[],[],[]]
-
-tempRatioList = []
 
 colourList = [(255,0,0),(0,0,255)]
 while True:
@@ -58,6 +50,9 @@ while True:
     results = hands.process(imgRGB)
 
     if results.multi_hand_landmarks:
+        predictionsList = []
+
+
         for handNum, handLms in enumerate(results.multi_hand_landmarks):
 
             # visual landmarks
@@ -67,17 +62,37 @@ while True:
                 if id in fingerLandmarks:
                     cv2.circle(img, (cx, cy), 15, colourList[handNum], cv2.FILLED)
             mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS)
-            print(handNum+1, "state is", determineType(handLms))
-            # tempRatioList = determineType(handLms)
-            # for i in range(4):
-            #     avgHandRatios[i].append(tempRatioList[i])
+            prediction = determineType(handLms)
+            predictionsList.append(prediction)
+            # print(handNum+1, "state is", prediction)
+
+            # if handNum == 0:
+            #         placement = (0,50)
+            # else:
+            #     placement = (300,50)
+            # cv2.putText(img, prediction, placement, cv2.FONT_HERSHEY_PLAIN, 3,
+            #             (255, 0, 255), 3)
+
+        # if len(predictionsList) == 2:
+        #     print("player 1:",round(results.multi_hand_landmarks[0].landmark[9].x,2))
+        #     print("player 2:",round(results.multi_hand_landmarks[1].landmark[9].x,2))
+        if len(predictionsList) == 2:
+            if results.multi_hand_landmarks[0].landmark[9].x <= results.multi_hand_landmarks[1].landmark[9].x:
+                player1 = results.multi_hand_landmarks[0]
+                player2 = results.multi_hand_landmarks[1]
+            else:
+                player1 = results.multi_hand_landmarks[1]
+                player2 = results.multi_hand_landmarks[0]
+
+        
+            cv2.putText(img, "player1", (round(player1.landmark[9].x*640),30), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
+            cv2.putText(img, "player2", (round(player2.landmark[9].x*640),30), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
+
 
     cv2.imshow("Image", img)
     if cv2.waitKey(1) == ord('q'):
         break
 
 cap.release()
-cv2.destroyAllWindows()
 
-# for index in avgHandRatios:
-#     print(sum(index)/len(index))
+cv2.destroyAllWindows()
