@@ -86,7 +86,13 @@ while True:
 
         
             cv2.putText(img, "player1", (round(player1.landmark[9].x*640),30), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
+            cv2.putText(img, predictionsList[0], (round(player1.landmark[9].x*640),60), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
+
+
             cv2.putText(img, "player2", (round(player2.landmark[9].x*640),30), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
+            cv2.putText(img, predictionsList[1], (round(player2.landmark[9].x*640),60), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
+
+        
 
 
     cv2.imshow("Image", img)
