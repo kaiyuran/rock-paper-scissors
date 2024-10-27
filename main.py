@@ -51,7 +51,7 @@ def determineWinner(predictions):
 tempTimer = time.time()
 start = time.time()
 gameDone = True
-cap = cv2.VideoCapture(2)
+cap = cv2.VideoCapture(0)
 
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(max_num_hands=2)
@@ -60,9 +60,11 @@ fingerLandmarks = [4, 8, 12, 16, 20]
 predictionsList = []
 
 cDownT = 5
-roundNum = 1
-gameData = []
+gameData = [0,0,0]
 roundStart = False
+
+
+temp = True
 
 colourList = [(255,0,0),(0,0,255)]
 while True:
@@ -123,8 +125,20 @@ while True:
 
     else:
         if not roundStart:
-            message = "Round "+str(roundNum)+" Press 'r' to begin"
-            msgSize = 2
+            if 3 in gameData[0:1]:
+                
+                if gameData[0] == 3:
+                    message = "Game Over, Player 1 Wins!"
+                else:
+                    message = "Game Over, Player 2 Wins!"
+                msgSize = 3
+                gameData = [0,0,0]
+            else:
+                if temp:
+                    print(gameData)
+                    temp = False
+                message = "Round "+str(sum(gameData)+1)+" Press 'r' to begin"
+                msgSize = 2
         else:
             if (cDownT - math.floor(time.time() - roundStartTime)) >= 0:
                 # print(math.floor(time.time() - roundStartTime >= 0))
@@ -133,13 +147,26 @@ while True:
                 # print(message)
                 cv2.putText(img, message, (50,height-30), cv2.FONT_HERSHEY_PLAIN, 2,(31, 209, 79), 3)
             else:
+                print(predictionsList)
                 winner = (determineWinner(predictionsList))
+                temp = True
                 message = winner
+                if (winner == "Player 1 Win!"):
+                    gameData[0] += 1
+                elif (winner == "Player 2 Win!"):
+                    gameData[1] += 1
+                else:
+                    gameData[2] += 1
+                roundStart = False
+                
                 pass
         if keyboard.is_pressed('r'):
+            
             roundStart = True
             roundStartTime = time.time()
     cv2.putText(img, message, (50,height-30), cv2.FONT_HERSHEY_PLAIN, msgSize,(31, 209, 79), 3)
+    cv2.putText(img, ("Player 1: "+ str(gameData[0])), (50,35), cv2.FONT_HERSHEY_PLAIN, 2,(31, 209, 79), 3)
+    cv2.putText(img, ("Player 2: "+ str(gameData[1])), (width-300,35), cv2.FONT_HERSHEY_PLAIN, 2,(31, 209, 79), 3)
 
         
         # gameDone = False
