@@ -1,6 +1,10 @@
 import cv2
-import mediapipe as mp
 import time
+import math
+
+import mediapipe as mp
+import keyboard
+
 
 def findDistance(p1x, p1y, p2x, p2y):
     return ((p2x - p1x) ** 2 + (p2y - p1y) ** 2) ** 0.5
@@ -32,8 +36,21 @@ def determineType(hand):
         prediction = "scissors"
     return prediction
 
+def determineWinner(predictions):
+    [p1, p2] = predictions
+    p1Win = [["paper", "rock"], ["scissors", "paper"], ["rock", "scissors"]]
+    p2Win = [["rock", "paper"], ["paper", "scissors"], ["scissors", "rock"]]
+    if [p1, p2] in p1Win:
+        return "Player 1 Win!"
+    elif [p1, p2] in p2Win:
+        return "Player 2 Win!"
+    else:
+        return "tie"
+
+
+tempTimer = time.time()
 start = time.time()
-startGame = False
+gameDone = True
 cap = cv2.VideoCapture(2)
 
 mpHands = mp.solutions.hands
@@ -42,7 +59,10 @@ mpDraw = mp.solutions.drawing_utils
 fingerLandmarks = [4, 8, 12, 16, 20]
 predictionsList = []
 
-
+cDownT = 5
+roundNum = 1
+gameData = []
+roundStart = False
 
 colourList = [(255,0,0),(0,0,255)]
 while True:
@@ -73,7 +93,7 @@ while True:
             # else:
             #     placement = (300,50)
             # cv2.putText(img, prediction, placement, cv2.FONT_HERSHEY_PLAIN, 3,
-            #             (255, 0, 255), 3)
+            #             (31, 209, 79), 3)
 
         # if len(predictionsList) == 2:
         #     print("player 1:",round(results.multi_hand_landmarks[0].landmark[9].x,2))
@@ -87,17 +107,49 @@ while True:
                 player2 = results.multi_hand_landmarks[0]
 
         
-            cv2.putText(img, "player1", (round(player1.landmark[9].x*width),30), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
-            cv2.putText(img, predictionsList[0], (round(player1.landmark[9].x*width),60), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
+            cv2.putText(img, "player1", (round(player1.landmark[9].x*width),30), cv2.FONT_HERSHEY_PLAIN, 3,(31, 209, 79), 3)
+            cv2.putText(img, predictionsList[0], (round(player1.landmark[9].x*width),60), cv2.FONT_HERSHEY_PLAIN, 3,(31, 209, 79), 3)
 
 
-            cv2.putText(img, "player2", (round(player2.landmark[9].x*width),30), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
-            cv2.putText(img, predictionsList[1], (round(player2.landmark[9].x*width),60), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
-            
+            cv2.putText(img, "player2", (round(player2.landmark[9].x*width),30), cv2.FONT_HERSHEY_PLAIN, 3,(31, 209, 79), 3)
+            cv2.putText(img, predictionsList[1], (round(player2.landmark[9].x*width),60), cv2.FONT_HERSHEY_PLAIN, 3,(31, 209, 79), 3)
+    
+    if keyboard.is_pressed('s') and gameDone:
+        gameDone = False
 
+    if gameDone:
+        message = "Press 's' to Start"
+        msgSize = 3
+
+    else:
+        if not roundStart:
+            message = "Round "+str(roundNum)+" Press 'r' to begin"
+            msgSize = 2
+        else:
+            if (cDownT - math.floor(time.time() - roundStartTime)) >= 0:
+                # print(math.floor(time.time() - roundStartTime >= 0))
+                message = "starting in " + str(cDownT - math.floor(time.time() - roundStartTime))
+                msgSize = 2
+                # print(message)
+                cv2.putText(img, message, (50,height-30), cv2.FONT_HERSHEY_PLAIN, 2,(31, 209, 79), 3)
+            else:
+                winner = (determineWinner(predictionsList))
+                message = winner
+                pass
+        if keyboard.is_pressed('r'):
+            roundStart = True
+            roundStartTime = time.time()
+    cv2.putText(img, message, (50,height-30), cv2.FONT_HERSHEY_PLAIN, msgSize,(31, 209, 79), 3)
+
+        
+        # gameDone = False
+
+
+
+    # print(time.time() - start)
 
     # if len(predictionsList) <2:
-    #     cv2.putText(img, "Please have both hands in frame", (30,30), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
+    #     cv2.putText(img, "Please have both hands in frame", (30,30), cv2.FONT_HERSHEY_PLAIN, 3,(31, 209, 79), 3)
 
         
 
