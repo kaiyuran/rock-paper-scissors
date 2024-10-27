@@ -2,7 +2,7 @@ import cv2
 import mediapipe as mp
 import time
 
-def findDistance(p1x, p1y, p2x, p2y, length=640, height=480):
+def findDistance(p1x, p1y, p2x, p2y):
     return ((p2x - p1x) ** 2 + (p2y - p1y) ** 2) ** 0.5
 
 def determineType(hand):
@@ -33,7 +33,7 @@ def determineType(hand):
     return prediction
 
 start = time.time()
-
+startGame = False
 cap = cv2.VideoCapture(2)
 
 mpHands = mp.solutions.hands
@@ -42,13 +42,15 @@ mpDraw = mp.solutions.drawing_utils
 fingerLandmarks = [4, 8, 12, 16, 20]
 predictionsList = []
 
+
+
 colourList = [(255,0,0),(0,0,255)]
 while True:
     success, img = cap.read()
     img = cv2.flip(img, 1)
     imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     results = hands.process(imgRGB)
-
+    height, width, c = img.shape
     if results.multi_hand_landmarks:
         predictionsList = []
 
@@ -57,8 +59,8 @@ while True:
 
             # visual landmarks
             for id, lm in enumerate(handLms.landmark):
-                h, w, c = img.shape
-                cx, cy = int(lm.x * w), int(lm.y * h)
+                
+                cx, cy = int(lm.x * width), int(lm.y * height)
                 if id in fingerLandmarks:
                     cv2.circle(img, (cx, cy), 15, colourList[handNum], cv2.FILLED)
             mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS)
@@ -85,15 +87,17 @@ while True:
                 player2 = results.multi_hand_landmarks[0]
 
         
-            cv2.putText(img, "player1", (round(player1.landmark[9].x*640),30), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
-            cv2.putText(img, predictionsList[0], (round(player1.landmark[9].x*640),60), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
+            cv2.putText(img, "player1", (round(player1.landmark[9].x*width),30), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
+            cv2.putText(img, predictionsList[0], (round(player1.landmark[9].x*width),60), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
 
 
-            cv2.putText(img, "player2", (round(player2.landmark[9].x*640),30), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
-            cv2.putText(img, predictionsList[1], (round(player2.landmark[9].x*640),60), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
+            cv2.putText(img, "player2", (round(player2.landmark[9].x*width),30), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
+            cv2.putText(img, predictionsList[1], (round(player2.landmark[9].x*width),60), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
             
-    if len(predictionsList) <2:
-        cv2.putText(img, "Please have both hands in frame", (30,30), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
+
+
+    # if len(predictionsList) <2:
+    #     cv2.putText(img, "Please have both hands in frame", (30,30), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
 
         
 
