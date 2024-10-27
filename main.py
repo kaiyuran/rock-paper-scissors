@@ -37,10 +37,10 @@ start = time.time()
 cap = cv2.VideoCapture(2)
 
 mpHands = mp.solutions.hands
-hands = mpHands.Hands()
+hands = mpHands.Hands(max_num_hands=2)
 mpDraw = mp.solutions.drawing_utils
 fingerLandmarks = [4, 8, 12, 16, 20]
-
+predictionsList = []
 
 colourList = [(255,0,0),(0,0,255)]
 while True:
@@ -91,6 +91,9 @@ while True:
 
             cv2.putText(img, "player2", (round(player2.landmark[9].x*640),30), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
             cv2.putText(img, predictionsList[1], (round(player2.landmark[9].x*640),60), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
+            
+    if len(predictionsList) <2:
+        cv2.putText(img, "Please have both hands in frame", (30,30), cv2.FONT_HERSHEY_PLAIN, 3,(255, 0, 255), 3)
 
         
 
